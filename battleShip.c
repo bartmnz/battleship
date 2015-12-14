@@ -12,16 +12,16 @@ int main (void){
     struct gameBoard* theBoard = malloc( sizeof(struct gameBoard));
     makeBoard(theBoard, 10);
     saveBoard(theBoard, "test.txt");
-    
-    char c[4];
-    fgets(c, 4, stdin);
-    int col = atoi(c);
-    fgets(c, 4, stdin);
-    int row = atoi(c);
-    printf("col %d row %d\n", col, row);
-    checkGuess(theBoard, col, row);
-    saveBoard(theBoard, "results.txt");
-    printf("ships left = %d \n", shipsLeft(theBoard));
+    while(shipsLeft(theBoard) != 0 ){
+        char c[4];
+        fgets(c, 4, stdin);
+        int col = atoi(c);
+        fgets(c, 4, stdin);
+        int row = atoi(c);
+        checkGuess(theBoard, col, row);
+        saveBoard(theBoard, "results.txt");
+        printf("ships left = %d \n", shipsLeft(theBoard));
+    }
     free(theBoard);
 }
 
