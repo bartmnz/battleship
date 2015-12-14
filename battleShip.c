@@ -6,13 +6,14 @@ int addShip( struct gameBoard*, int, char);
 int goodValue(struct gameBoard*, int*, int*, int);
 void checkGuess(struct gameBoard*, int, int);
 int shipsLeft(struct gameBoard*);
+int loadGame(struct gameBoard*, char*);
 
 int main (void){
     srand(time(NULL));
     struct gameBoard* theBoard = malloc( sizeof(struct gameBoard));
     makeBoard(theBoard, 10);
     saveBoard(theBoard, "test.txt");
-    while(shipsLeft(theBoard) != 0 ){
+//    while(shipsLeft(theBoard) != 0 ){
         char c[4];
         fgets(c, 4, stdin);
         int col = atoi(c);
@@ -21,7 +22,11 @@ int main (void){
         checkGuess(theBoard, col, row);
         saveBoard(theBoard, "results.txt");
         printf("ships left = %d \n", shipsLeft(theBoard));
-    }
+//    }
+    struct gameBoard* otherBoard = malloc( sizeof(struct gameBoard));
+    loadGame(otherBoard, "test.txt");
+    saveBoard(otherBoard, "LoadCheck.txt");
+    free(otherBoard);
     free(theBoard);
 }
 
@@ -234,4 +239,47 @@ int shipsLeft(struct gameBoard* theBoard){
         }
     }
     return rValue;
+}
+
+/*Function opens a saved game and loads the data into theBoard
+ * Parameter fileName -- name of file to open
+ * Parameter theBoard -- game to store data from file.
+ * Return 1 on success else 0
+ */
+
+int loadGame(struct gameBoard* theBoard, char* fileName){
+    FILE* file;
+    if( ! (file = fopen( fileName, "r"))){
+        fprintf( stderr, "ERROR: Could not open file.\n");
+        return 0;
+    }
+    memset(theBoard, 0, sizeof (struct gameBoard));
+    char temp; 
+    int column = 0;
+    int row = 0;
+    while ((temp = fgetc(file)) != EOF){
+        printf(" column %d row %d size %d\n", column, row, theBoard->numSpaces);
+       // fgetc(stdin);
+        if ( temp == '\n'){
+            column ++;
+            theBoard->size = row;
+            row = 0;
+            continue;
+        }
+        if (temp != '*'){
+            if( temp == 'P' || temp == 'S' || temp == 'C' || temp == 'D'
+                || temp == 'B' || temp == 'A' || temp =='X'){
+                    theBoard->locations[theBoard->numSpaces].column = column;
+                    theBoard->locations[theBoard->numSpaces].row = row;
+                    theBoard->locations[theBoard->numSpaces].hit = false;
+                    theBoard->locations[theBoard->numSpaces].boatType = temp;
+                    theBoard->numSpaces++;
+            } else {
+                fprintf(stderr, "ERROR: Invalid boat Type. \n");
+                return 0;
+            }
+        }
+        row++;
+    }
+    return 1;
 }
