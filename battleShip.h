@@ -14,6 +14,8 @@ typedef struct{
 
 struct gameBoard{
     int size;
+    int numCols;
+    int numRows;
     int numSpaces;
     coordinate locations[19];
 };

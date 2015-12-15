@@ -11,7 +11,7 @@ $(TARGET1): $(OBJS1)
 
 
 debug: CFLAGS+=-g
-debug: all
+debug: $(TARGET1)
 
 
 clean:

@@ -1,7 +1,7 @@
 #include "battleShip.h"
 
 int saveBoard( struct gameBoard*, char*);
-int makeBoard( struct gameBoard*, int );
+int makeBoard( struct gameBoard*, int, int);
 int addShip( struct gameBoard*, int, char);
 int goodValue(struct gameBoard*, int*, int*, int);
 void checkGuess(struct gameBoard*, int, int);
@@ -11,17 +11,18 @@ int loadGame(struct gameBoard*, char*);
 int main (void){
     srand(time(NULL));
     struct gameBoard* theBoard = malloc( sizeof(struct gameBoard));
-    makeBoard(theBoard, 10);
+    memset(theBoard, 0, sizeof(struct gameBoard));
+    makeBoard(theBoard, 10, 15);
     saveBoard(theBoard, "test.txt");
+
 //    while(shipsLeft(theBoard) != 0 ){
         char c[4];
         fgets(c, 4, stdin);
-        int row = atoi(c);
-        fgets(c, 4, stdin);
         int col = atoi(c);
+        fgets(c, 4, stdin);
+        int row = atoi(c);
         checkGuess(theBoard, row, col);
         saveBoard(theBoard, "results.txt");
-//        printf("ships left = %d \n", shipsLeft(theBoard));
 //    }
     struct gameBoard* otherBoard = malloc( sizeof(struct gameBoard));
     loadGame(otherBoard, "test.txt");
@@ -36,12 +37,13 @@ int main (void){
  * Return 1 on success else 0
  */
 
-int makeBoard( struct gameBoard* theBoard, int size){
-    if (size < 10 || size > 100){
+int makeBoard( struct gameBoard* theBoard, int numRows, int numCols){
+    if (numRows < 10 || numCols < 10){
         fprintf(stderr, "ERROR: expected size between 10 and 100. \n");
         return 0;
     }
-    theBoard->size = size;
+    theBoard->numRows = numRows;
+    theBoard->numCols = numCols;
     char boats[6] = {'P', 'S', 'C', 'D', 'B', 'A'};
     int lens[6] = {2, 2, 3, 3, 4, 5};
     for(int i = 0; i < 6; i ++){
@@ -63,11 +65,11 @@ int addShip( struct gameBoard* theBoard, int length, char type){
     // check if gameboard is null
     
     bool isPlaced = false;
-    int* col = malloc(length), *row = malloc(length), dir;
+    int* col = malloc(sizeof(int)* length), *row = malloc(sizeof(int) *length), dir;
     while(!isPlaced){
         // need to initialize col and row to zero;
-        col[0] = rand() % theBoard->size;
-        row[0] = rand() % theBoard->size;
+        row[0] = rand() % theBoard->numRows;
+        col[0] = rand() % theBoard->numCols;
         dir = rand() % 4;               // choose a starting place and direction
         
         if( dir == 0){                  // set arrays to correspond to potential ship placement
@@ -115,7 +117,7 @@ int addShip( struct gameBoard* theBoard, int length, char type){
 
 int goodValue(struct gameBoard* theBoard, int col[], int row[], int length){
     for( int i = 0; i < length; i ++){
-            if(col[i] >= theBoard->size || row[i] >= theBoard->size
+            if(col[i] >= theBoard->numCols || row[i] >= theBoard->numRows
                 || col[i] < 0 || row[i] < 0){
                 return 0;                  // position is out of bounds.
             }
@@ -147,41 +149,34 @@ int saveBoard( struct gameBoard* theBoard, char* fileName){
 //        fprintf( stderr, "ERROR: could not save board. \n");
 //        return 0;
 //    }
-    int size = 0;
-    size = theBoard->size;
-    if (!(size > 9 && size < 101)){
+    if (!(theBoard->numCols > 9 && theBoard->numRows > 9)){
         fprintf( stderr, "ERROR: invalid size. \n");
         return 0;
     }
     char** temp;                                // temporary matrix to display board contents as actual board
-    temp = malloc( 88);
-    for( int i = 0; i <= size; i ++){
-        temp[i] = malloc(sizeof(char) * (size));
+    
+    temp = malloc( sizeof(void*) * (1+theBoard->numRows));
+    for( int i = 0; i < theBoard->numRows; i++){
+        temp[i] = malloc(sizeof(char) * (1+theBoard->numCols));
     }
-    for (int i = 0; i <= size; i++){
-        for (int j =0; j < size; j++){
+    for (int i = 0; i < theBoard->numRows; i++){
+        for (int j =0; j < theBoard->numCols; j++){
             temp[i][j] = '*';    
         }
     }
-//    memset(temp, 0, sizeof(*temp));
-    
     for ( int count = 0; count < 19; count ++){ // for each location, set temp to appropiate value.
-//        printf(" %d, %d = %c\n", theBoard->locations[count].column, theBoard->locations[count].row, theBoard->locations[count].boatType);
-        temp[(theBoard->locations[count].row)+1][theBoard->locations[count].column] = theBoard->locations[count].boatType;
-        
+        temp[(theBoard->locations[count].row)][theBoard->locations[count].column] = theBoard->locations[count].boatType;
     }
+    
         int columns, rows;
-//    printf("9,5 is %c\n ", temp[9][5]);
-    for ( rows = 1; rows <= theBoard->size; rows ++){
-        for ( columns = 0; columns < theBoard->size; columns ++){
-          // printf(" %c ", temp[columns][rows]);   
+    for ( rows = 0; rows < theBoard->numRows; rows ++){
+        for ( columns = 0; columns < theBoard->numCols; columns ++){
             fwrite( &(temp[rows][columns]), 1, 1, file );
         }
-       // printf("\");
         fwrite("\n", 1, 1, file);
     }
     
-    for (int i = 0; i <= size; i++){
+    for (int i = 0; i < theBoard->numRows; i++){
         free (temp[i]);
     }
     free(temp);
@@ -258,11 +253,11 @@ int loadGame(struct gameBoard* theBoard, char* fileName){
     int column = 0;
     int row = 0;
     while ((temp = fgetc(file)) != EOF){
-        printf(" column %d row %d size %d\n", column, row, theBoard->numSpaces);
-       // fgetc(stdin);
         if ( temp == '\n'){
             row ++;
             theBoard->size = row;
+            theBoard->numRows = row;
+            theBoard->numCols = column;
             column = 0;
             continue;
         }
@@ -281,5 +276,6 @@ int loadGame(struct gameBoard* theBoard, char* fileName){
         }
         column++;
     }
+    fclose(file);
     return 1;
 }
