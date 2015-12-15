@@ -16,12 +16,12 @@ int main (void){
 //    while(shipsLeft(theBoard) != 0 ){
         char c[4];
         fgets(c, 4, stdin);
-        int col = atoi(c);
-        fgets(c, 4, stdin);
         int row = atoi(c);
-        checkGuess(theBoard, col, row);
+        fgets(c, 4, stdin);
+        int col = atoi(c);
+        checkGuess(theBoard, row, col);
         saveBoard(theBoard, "results.txt");
-        printf("ships left = %d \n", shipsLeft(theBoard));
+//        printf("ships left = %d \n", shipsLeft(theBoard));
 //    }
     struct gameBoard* otherBoard = malloc( sizeof(struct gameBoard));
     loadGame(otherBoard, "test.txt");
@@ -167,15 +167,15 @@ int saveBoard( struct gameBoard* theBoard, char* fileName){
     
     for ( int count = 0; count < 19; count ++){ // for each location, set temp to appropiate value.
 //        printf(" %d, %d = %c\n", theBoard->locations[count].column, theBoard->locations[count].row, theBoard->locations[count].boatType);
-        temp[(theBoard->locations[count].column)+1][theBoard->locations[count].row] = theBoard->locations[count].boatType;
+        temp[(theBoard->locations[count].row)+1][theBoard->locations[count].column] = theBoard->locations[count].boatType;
         
     }
         int columns, rows;
 //    printf("9,5 is %c\n ", temp[9][5]);
-    for ( columns = 1; columns <= theBoard->size; columns ++){
-        for ( rows = 0; rows < theBoard->size; rows ++){
+    for ( rows = 1; rows <= theBoard->size; rows ++){
+        for ( columns = 0; columns < theBoard->size; columns ++){
           // printf(" %c ", temp[columns][rows]);   
-            fwrite( &(temp[columns][rows]), 1, 1, file );
+            fwrite( &(temp[rows][columns]), 1, 1, file );
         }
        // printf("\");
         fwrite("\n", 1, 1, file);
@@ -201,11 +201,11 @@ void checkGuess(struct gameBoard* theBoard, int row, int column){
                 if( theBoard->locations[count].row == row-1 &&
                     theBoard->locations[count].column == column-1){
                     theBoard->locations[count].boatType = 'X';
-                    printf("HIT\n");          // location intersects with a ship.
+                    fprintf(stdout, "HIT\n");          // location intersects with a ship.
                     return;
                 }
             }
-    printf("MISS\n");
+    fprintf(stdout, "MISS\n");
 }
 
 /* Function evaluates the board to see how many ships are left
@@ -261,9 +261,9 @@ int loadGame(struct gameBoard* theBoard, char* fileName){
         printf(" column %d row %d size %d\n", column, row, theBoard->numSpaces);
        // fgetc(stdin);
         if ( temp == '\n'){
-            column ++;
+            row ++;
             theBoard->size = row;
-            row = 0;
+            column = 0;
             continue;
         }
         if (temp != '*'){
@@ -279,7 +279,7 @@ int loadGame(struct gameBoard* theBoard, char* fileName){
                 return 0;
             }
         }
-        row++;
+        column++;
     }
     return 1;
 }
